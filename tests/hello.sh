@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-# `test_name`拿到shell文件名
+# `test_name`拿到shell文件名   
 test_name=$(basename "$0" .sh)
 t=out/tests/$test_name
 

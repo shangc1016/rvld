@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/shangc1016/rvld/pkg/linker"
 	"github.com/shangc1016/rvld/pkg/utils"
 )
 
@@ -12,12 +12,11 @@ func main() {
 		utils.Fatal("wrong args")
 	}
 
-	filename := os.Args[1]
-	contents, err := os.ReadFile(filename)
-	if err != nil {
-		utils.Fatal(err.Error())
-	}
+	// 从命令行的第一个参数解析对象文件名
+	file := linker.MustNewFile(os.Args[1])
 
-	fmt.Println(len(contents))
+	// 按照对象文件的elf格式解析出文件的section header
+	inputfile := linker.NewInputFile(file)
+	utils.Assert(len(inputfile.ElfSections) == 10)
 
 }
