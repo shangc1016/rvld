@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/shangc1016/rvld/pkg/linker"
@@ -15,8 +16,23 @@ func main() {
 	// 从命令行的第一个参数解析对象文件名
 	file := linker.MustNewFile(os.Args[1])
 
-	// 按照对象文件的elf格式解析出文件的section header
-	inputfile := linker.NewInputFile(file)
-	utils.Assert(len(inputfile.ElfSections) == 10)
+	// 继续解析objfile
+	objfile := linker.NewObjFile(file)
+	objfile.Parse()
+
+	for _, sh := range objfile.ElfSections {
+		fmt.Println(linker.ElfGetName(objfile.ShStrtab, sh.Name))
+	}
+
+	fmt.Println("section header lens: ", len(objfile.ElfSections))
+
+	fmt.Println("firstGlobal: ", objfile.FirstGlobal)
+
+	fmt.Println("symbol table size: ", len(objfile.ElfSyms))
+
+	// 打印出符号表的
+	for _, sym := range objfile.ElfSyms {
+		fmt.Println(linker.ElfGetName(objfile.SymbolStrtab, sym.Name))
+	}
 
 }

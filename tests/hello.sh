@@ -6,7 +6,7 @@ test_name=$(basename "$0" .sh)
 t=out/tests/$test_name
 
 mkdir -p  "$t"
-cat << EOF | riscv64-unknown-linux-gnu-clang -o "$t"/a.o -c -xc -
+cat << EOF | riscv64-unknown-linux-gnu-gcc -o "$t"/a.o -c -xc -
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
