@@ -43,10 +43,9 @@ func main() {
 		utils.Fatal("unknown emulation type")
 	}
 
-	// 把其他的参数打印出来，剩下的都是-lxxx动态链接库、以及xxx.o对象文件
-	for _, re := range remaining {
-		fmt.Println(re)
-	}
+	linker.ReadInputFiles(ctx, remaining)
+
+	fmt.Println(len(ctx.Objs))
 
 }
 

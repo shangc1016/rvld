@@ -26,7 +26,7 @@ func NewInputFile(file *File) InputFile {
 	}
 
 	// check magic number
-	if !CheckMagic(file.Contents) {
+	if !CheckMagic(file.Contents, ElfObjectMagicNumber) {
 		utils.Fatal("not an ELF format file")
 	}
 

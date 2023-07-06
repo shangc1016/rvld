@@ -8,6 +8,7 @@ type ContextArgs struct {
 
 type Context struct {
 	Args ContextArgs
+	Objs []*ObjFile
 }
 
 func NewContext() *Context {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"runtime/debug"
+	"strings"
 )
 
 func Fatal(v any) {
@@ -36,4 +37,12 @@ func Read[T any](data []byte) (val T) {
 	MustNo(err)
 	// 返回类型处已经指定了返回值
 	return
+}
+
+// 去除prefix
+func RemovePrefix(s, prefix string) (string, bool) {
+	if strings.HasPrefix(s, prefix) {
+		return s[len(prefix):], true
+	}
+	return "", false
 }

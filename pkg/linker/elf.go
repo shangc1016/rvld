@@ -2,7 +2,11 @@ package linker
 
 import (
 	"bytes"
+	"strconv"
+	"strings"
 	"unsafe"
+
+	"github.com/shangc1016/rvld/pkg/utils"
 )
 
 // elf header size
@@ -13,6 +17,12 @@ const SHdrSize = unsafe.Sizeof(SHdr{})
 
 // 符号表结构的大小
 const SymSize = unsafe.Sizeof(Sym{})
+
+// archive file header size
+const ArHdrSize = unsafe.Sizeof(ArHdr{})
+
+const ElfObjectMagicNumber = "\177ELF"
+const ElfStaticLinkMagicNumber = "!<arch>\n"
 
 // elf header struct
 type EHdr struct {
@@ -54,6 +64,66 @@ type Sym struct {
 	Shndx uint16
 	Val   uint64
 	Size  uint64
+}
+
+type ArHdr struct {
+	Name [16]byte
+	Date [12]byte
+	Uid  [6]byte
+	Gid  [6]byte
+	Mode [8]byte
+	Size [10]byte // 保存一个section中数据区域的大小
+	Fmag [2]byte
+}
+
+func (a *ArHdr) HasPrefix(s string) bool {
+	return strings.HasPrefix(string(a.Name[:]), s)
+}
+
+// string table
+func (a *ArHdr) IsStrtab() bool {
+	return a.HasPrefix("// ")
+}
+
+// symbol table
+func (a *ArHdr) IsSymtab() bool {
+	return a.HasPrefix("/ ") || a.HasPrefix("/SYM64/ ")
+}
+
+//
+// 如果不是string table、也不是symbol table那就是objfile
+//
+
+func (a *ArHdr) ReadName(strTab []byte) string {
+	// archive的objfile的name有两种。
+	// long filename  :
+	// short filename : 直接保存在每个section的arHdr的name字段
+
+	if a.HasPrefix("/") {
+		// 如果name以/开头，那么就是long filename，否则是short filename
+		// long filename的话，是斜杠加上一个数字,后面都是空格。根据这个数字再次在strtab中进行索引。
+		start, err := strconv.Atoi(strings.TrimSpace(string(a.Name[1:])))
+		utils.MustNo(err)
+		// start就是这个section的名字在strtab中的起始偏移位置
+		// end结束位置就是在start的位置往后面找到"/\n"
+		end := start + bytes.Index(strTab[start:], []byte("/\n"))
+		return string(strTab[start:end])
+	}
+
+	// short filename
+	// short filename 结束的位置是'/'
+	end := strings.Index(string(a.Name[:]), "/")
+	// 确保一定能找到'/'
+	utils.Assert(end != -1)
+
+	return string(a.Name[:end])
+}
+
+// 返回archive中一个section的size
+func (a *ArHdr) GetSize() int {
+	size, err := strconv.Atoi(strings.TrimSpace(string(a.Size[:])))
+	utils.MustNo(err)
+	return size
 }
 
 // 根据在shstrtab这个sh中的偏移量，返回相应sh的名字的字符串
